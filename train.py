@@ -44,7 +44,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=2e-4)
     parser.add_argument('--wt_kl', type=float, default=1e-5)
     parser.add_argument('--imsize', type=int, default=512)
-    parser.add_argument('--model_save_step', type=int, default=500)
+    parser.add_argument('--model_save_step', type=int, default=2000)
     parser.add_argument('--sample_step', type=int, default=100)
     parser.add_argument('--log_step', type=int, default=10)
     parser.add_argument('--device', type=str, default='cuda')
