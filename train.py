@@ -60,7 +60,7 @@ if __name__ == '__main__':
                                      batch_size=args.batch_size, num_workers=0, mode=True)
     data_iter = iter(dataloader.load())
 
-    vae = VAE(19, 32, 32, 1024).to(device)
+    vae = VAE(19, 32, 32, 512).to(device)
 
     model_save_path = os.path.join(args.model_save_path, args.version)
     sample_save_path = os.path.join(args.sample_save_path, args.version)
