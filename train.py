@@ -9,15 +9,15 @@ import torchvision
 import torchvision.transforms as transforms
 from networks import VAE
 from data_loader import CelebAMaskHQMLoader
-from utils import denorm, generate_label, convert_onehot, labels_colorize
+from utils import generate_label, convert_onehot, labels_colorize
 
 
-def kl_divergence(mu, logvar):
-    d_kl = 0.5 * torch.sum(mu.pow(2)+logvar.exp()-logvar-1)
-    return d_kl
+def kl_divergence(mu, log_var):
+    kld = torch.mean(-0.5*torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim=1), dim=0)
+    return kld
 
 
-def pixel_cross_entropy(predict, target, weight=None, size_average=True):
+def pixel_cross_entropy(predict, target, weight=None, reduction='mean'):
     n, c, h, w = predict.size()
     nt, ht, wt = target.size()
     # Handle inconsistent size between input and target
@@ -26,7 +26,7 @@ def pixel_cross_entropy(predict, target, weight=None, size_average=True):
 
     predict = predict.transpose(1, 2).transpose(2, 3).contiguous().view(-1, c)
     target = target.view(-1)
-    return f.cross_entropy(predict, target, weight=weight, size_average=size_average, ignore_index=250)
+    return f.cross_entropy(predict, target, weight=weight, reduction=reduction, ignore_index=250)
 
 
 if __name__ == '__main__':
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=8)
     parser.add_argument('--beta1', type=float, default=.5)
     parser.add_argument('--beta2', type=float, default=.999)
-    parser.add_argument('--lr', type=float, default=2e-4)
+    parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--wt_kl', type=float, default=1e-5)
     parser.add_argument('--imsize', type=int, default=512)
     parser.add_argument('--model_save_step', type=int, default=2000)
@@ -93,6 +93,7 @@ if __name__ == '__main__':
         loss_rec = pixel_cross_entropy(labels_predict, labels_real_plain)
 
         loss = loss_rec + loss_kl
+        # loss = loss_rec
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -114,7 +115,7 @@ if __name__ == '__main__':
                 labels_sample, _, _, _ = vae(labels_real_onehot)
                 labels_rec_colors = generate_label(labels_sample, args.imsize)
                 labels_ori_colors = labels_colorize(labels_real_plain.unsqueeze(1).cpu())
-            torchvision.utils.save_image(torch.cat([labels_ori_colors, denorm(labels_rec_colors.data)], dim=0),
+            torchvision.utils.save_image(torch.cat([labels_ori_colors, labels_rec_colors.data], dim=0),
                                          os.path.join(sample_save_path, '{}.png'.format(step + 1)))
 
     # save final model

@@ -72,7 +72,8 @@ class VAE(nn.Module):
 
         self.up7 = nn.UpsamplingNearest2d(scale_factor=2)
         self.pd7 = nn.ReplicationPad2d(1)
-        self.d8 = nn.Conv2d(ngf, nc, 3, 1)
+        # self.d8 = nn.Conv2d(ngf, nc, 3, 1)
+        self.d8 = nn.Conv2d(ngf, nc, 1)
 
         self.leakyrelu = nn.LeakyReLU(0.2)
         self.relu = nn.ReLU()
@@ -109,7 +110,8 @@ class VAE(nn.Module):
         h5 = self.leakyrelu(self.bn11(self.d5(self.pd4(self.up4(h4)))))
         h6 = self.leakyrelu(self.bn12(self.d6(self.pd5(self.up5(h5)))))
         h7 = self.leakyrelu(self.bn13(self.d7(self.pd6(self.up6(h6)))))
-        return self.d8(self.pd7(self.up7(h7)))
+        # return self.d8(self.pd7(self.up7(h7)))
+        return self.d8(self.up7(h7))
 
     def get_latent_var(self, x):
         mu, logvar = self.encode(x)
